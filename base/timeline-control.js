@@ -49,8 +49,6 @@ Control.prototype.keyframeAt = function(time, radius) {
     return idx === -1 ? null : this.keyframes[idx]
 }
 
-
-
 //lerps the value at the specified time stamp
 Control.prototype.getValueAt = function(time) {
     if (this.keyframes.length === 0)
@@ -74,6 +72,7 @@ Control.prototype.getValueAt = function(time) {
     else {
         var startFrame = this.keyframes[prev]
         var endFrame = this.keyframes[prev+1]
+
         //clamp and get range
         time = Math.max(startFrame.time, Math.min(time, endFrame.time))
         var t = range(startFrame.time, endFrame.time, time)
@@ -81,30 +80,8 @@ Control.prototype.getValueAt = function(time) {
         //ease using the left keyframe
         if (typeof startFrame.ease === 'function')
             return startFrame.ease(startFrame.value, endFrame.value, t)
+        
         return lerp(startFrame.value, endFrame.value, t)
-    }
-}
-
-//Gets the alpha component for interpolation, based on the time in our timeline
-Control.prototype.getTweenAlpha = function(time) {
-    //no keyframes..
-    if (this.keyframes.length === 0)
-        return
-
-    var prev = -1
-    
-    console.log(prev)
-    //no lerp
-    if (prev === -1 || prev === this.keyframes.length-1) {
-        if (prev < 0)
-            prev = 0
-        this.value = this.keyframes[prev].value
-    } 
-    //simple lerp for now
-    else {
-        this.value = this.keyframes[prev].value
-        var t = range(this.keyframes[prev].time, this.keyframes[prev+1].time, time)
-        this.editor.lerp(this.keyframes[prev+1].value, t)
     }
 }
 

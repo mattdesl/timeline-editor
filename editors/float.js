@@ -1,1 +1,0 @@
-module.exports = require('./VecN').bind(this, 2)

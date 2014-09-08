@@ -124,10 +124,12 @@
 	border-top: 0;
 }
 
-.keyframe-previous, .keyframe-next {
+.keyframe-previous, .keyframe-next, .keyframe-toggle {
 	font-size: 10px;
 	cursor: pointer;
 }
+
+
 
 .expand, .lock, .visible, .solo {
 	font-size: 12px;

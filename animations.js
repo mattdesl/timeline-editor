@@ -41,9 +41,7 @@ Animations.prototype._createKeyframe = function(control, parent, x) {
     keyframe.style.left = Math.round(x)+'px'
     parent.appendChild(keyframe)
 
-    control.addKeyframe(x)
-
-    console.log(control.keyframes)
+    control.addKeyframe(x, keyframe)
 }
 
 Animations.prototype._updateProperties = function() {
@@ -51,8 +49,18 @@ Animations.prototype._updateProperties = function() {
     this.layerManager.layers.forEach(function(layer) {
         layer.controls.forEach(function(c) {
             c.update(curTime)
+
+            var highlight = c.keyframes.get(curTime)
+            c.keyframes.frames.forEach(function(k) {
+                k.element.style.borderColor = k===highlight ? 'green' : 'red'
+            })
         })
     })
+}
+
+Animations.prototype.setTime = function(time) {
+    this.playhead = time
+    this.playheadElement.style.left = Math.round(time)+'px'
 }
 
 Animations.prototype._setupControlEvents = function(control, row) {
@@ -60,8 +68,7 @@ Animations.prototype._setupControlEvents = function(control, row) {
         var rect = row.getBoundingClientRect()
         var x = offset(ev, { clientRect: rect }).x
 
-        this.playhead = x
-        this.playheadElement.style.left = Math.round(x)+'px'
+        this.setTime(x)
 
         this.dragging = ev.button||ev.which
         this._updateProperties()
@@ -73,8 +80,7 @@ Animations.prototype._setupControlEvents = function(control, row) {
             var rect = row.getBoundingClientRect()
             var x = offset(ev, { clientRect: rect }).x
 
-            this.playhead = x
-            this.playheadElement.style.left = Math.round(x)+'px'
+            this.setTime(x)
             this._updateProperties()
             this.emit('set-playhead')
         }
@@ -85,7 +91,41 @@ Animations.prototype._setupControlEvents = function(control, row) {
     }.bind(this))
 
     control.on('toggle-keyframe', function() {
-        this._createKeyframe(control, row, this.playhead)
+        var current = control.keyframes.getIndex( this.playhead )
+        if (current !== -1)  {
+            var currentKey = control.keyframes.frames[current]
+            control.keyframes.splice(current, 1)
+            currentKey.element.parentNode.removeChild(currentKey.element)
+        }
+        else
+            this._createKeyframe(control, row, this.playhead)
+        this._updateProperties()
+    }.bind(this))
+
+    control.on('keyframe-next', function() {
+        var next = control.keyframes.next( this.playhead )
+        if (next) {
+            this.setTime(next.time)
+            this._updateProperties()
+            this.emit('set-playhead')
+        }
+    }.bind(this))
+
+    control.on('keyframe-previous', function() {
+        var previous = control.keyframes.previous( this.playhead )
+        if (previous) {
+            this.setTime(previous.time)
+            this._updateProperties()
+            this.emit('set-playhead')
+        }
+    }.bind(this))
+
+    control.on('change', function() {
+        var current = control.keyframes.get( this.playhead )
+
+        if (current) {
+            current.value = control.value
+        }
     }.bind(this))
 
     // events.on(row, 'keydown', function(ev) {

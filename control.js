@@ -4,6 +4,7 @@ var hyperglue = require('hyperglue')
 var $ = require('dom-select')
 var classes = require('dom-classes')
 var events = require('dom-events')
+var Keyframes = require('keyframes')
 
 var EventEmitter = require('events').EventEmitter
 var inherits = require('inherits')
@@ -21,7 +22,7 @@ function Control(data, editors) {
     this.element = null
     this.enabled = true
     this.editor = null
-    this.keyframes = []
+    this.keyframes = new Keyframes()
 
     if (data)
         this.create(data, editors)
@@ -34,41 +35,22 @@ Control.prototype.dispose = function() {
         this.element.parentNode.removeChild(this.element)
         this.element = null
     }
-    this.keyframes.length = 0
+    this.keyframes.frames.length = 0
 }
 
 Control.prototype.update = function(time) {
     //no keyframes..
-    if (this.keyframes.length === 0)
+    if (this.keyframes.count === 0)
         return
 
-    var prev = -1
-    //get closest keyframe to time
-    for (var i=this.keyframes.length-1; i>=0; i--) {
-        if (time >= this.keyframes[i].time) {
-            prev = i
-            break
-        }
-    }
-    console.log(prev)
-    //no lerp
-    if (prev === -1 || prev === this.keyframes.length-1) {
-        if (prev < 0)
-            prev = 0
-        this.value = this.keyframes[prev].value
-    } 
-    //simple lerp for now
-    else {
-        this.value = this.keyframes[prev].value
-        var t = range(this.keyframes[prev].time, this.keyframes[prev+1].time, time)
-        this.editor.lerp(this.keyframes[prev+1].value, t)
-    }
+    this.value = this.keyframes.value(time).slice(0)
 }
 
-Control.prototype.addKeyframe = function(time) {
-    this.keyframes.push({ time: time, value: this.value })
-    this.keyframes.sort(sort)
+Control.prototype.addKeyframe = function(time, element) {
+    this.keyframes.add({ time: time, element: element, value: this.value })
 }
+
+
 
 Control.prototype.create = function(data, editors) {
     this.dispose()
@@ -78,7 +60,8 @@ Control.prototype.create = function(data, editors) {
     })  
     this.name = data.name
 
-    this.keyframes = data.keyframes || []
+    this.keyframes.frames = data.keyframes || []
+    this.keyframes.sort()
 
     if (!data.type)
         data.type = 'default'
@@ -89,12 +72,21 @@ Control.prototype.create = function(data, editors) {
     } else
         throw new Error("no editor "+data.type+" for control: "+data)
 
-
     //TODO: eventually make a "skeleton" of everything that
     //doesn't actually depend on the DOM
     var toggle = $('.keyframe-toggle', this.element)
     events.on(toggle, 'click', function(ev) {
         this.emit('toggle-keyframe')
+    }.bind(this))
+
+    var next = $('.keyframe-next', this.element)
+    events.on(next, 'click', function(ev) {
+        this.emit('keyframe-next')
+    }.bind(this))
+
+    var previous = $('.keyframe-previous', this.element)
+    events.on(previous, 'click', function(ev) {
+        this.emit('keyframe-previous')
     }.bind(this))
 
     this.editor.on('change', function() {

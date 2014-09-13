@@ -14,7 +14,7 @@ function Control(data) {
 		return new Control(data)
 
 	this.keyframes = keyframes()
-	this.defaultValue = null
+	this.value = null
 	this.type = DEFAULT_TYPE
 	this.name = ''
 	if (data)
@@ -34,14 +34,14 @@ Control.prototype.load = function(data) {
 	
 	this.name = data.name
 	this.type = typeof data.type === 'string' ? data.type : DEFAULT_TYPE
-	this.defaultValue = data.defaultValue
+	this.value = data.value
 	if (data.keyframes)
 		this.keyframes.frames = data.keyframes
 }
 
-Control.prototype.value = function(time, ease) {
+Control.prototype.interpolate = function(time, ease) {
 	if (this.keyframes.count === 0)
-		return this.defaultValue
+		return this.value
 	return this.keyframes.value(time, ease)
 }
 

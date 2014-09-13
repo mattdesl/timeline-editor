@@ -19,7 +19,6 @@ function Timeline(data, opt) {
 
     this.element.appendChild(this.layerManager.element)
     this.element.appendChild(this.animations.element)
-
 }
 
 require('inherits')(Timeline, EventEmitter)

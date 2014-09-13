@@ -7,6 +7,9 @@ var easings = {
 	linear: function(t) {
 		return t
 	},
+	expoOut: function(t) {
+		return t == 1.0 ? t : 1.0 - Math.pow(2.0, -10.0 * t);
+	},
 	bounceOut: function(t) {
 		var a = 4.0 / 11.0
 		var b = 8.0 / 11.0
